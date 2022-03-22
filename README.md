@@ -1,5 +1,5 @@
 ---
-title: Install RKE2 + Rancher + Longhorn
+title: Simple RKE2, Longhorn, and Rancher Install
 author: Andy Clemenko, @clemenko, andy.clemenko@rancherfederal.com
 ---
 
