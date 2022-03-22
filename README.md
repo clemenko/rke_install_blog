@@ -42,7 +42,7 @@ Just a geek - Andy Clemenko - @clemenko - andy.clemenko@rancherfederal.com
 
 ## Prerequisites
 
-The prerequisites are fairly simple. We need 3 linux servers with access to the internet. They can be bare metal, or in the cloud provider of your choice. I prefer [Digital Ocean](https://digitalocean.com). We need an `ssh` client to connect to the servers. And finally DNS to make things simple. Ideally we need a URL for the Rancher interface. For the purpose of the this guide let's use `rancher.dockr.life`. We will need to point that name to the first server of the cluster.
+The prerequisites are fairly simple. We need 3 linux servers with access to the internet. They can be bare metal, or in the cloud provider of your choice. I prefer [Digital Ocean](https://digitalocean.com). We need an `ssh` client to connect to the servers. And finally DNS to make things simple. Ideally we need a URL for the Rancher interface. For the purpose of the this guide let's use `rancher.dockr.life`. We will need to point that name to the first server of the cluster. Here are all the files: https://github.com/clemenko/rke_install_blog.
 
 ## Linux Servers
 
