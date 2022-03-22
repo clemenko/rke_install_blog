@@ -138,6 +138,8 @@ rancher1   Ready    control-plane,etcd,master   7m56s   v1.21.10+rke2r2
 
 For those that are not TOO familiar with k8s, the config file is what `kubectl` uses to authenticate to the api service. If you want to use a workstation, jump box, or any other machine you will want to copy `/etc/rancher/rke2/rke2.yaml`. You will want to modify the file to change the ip address. We will need one more file from `rancher1`, aka the server, the agent join token. Copy `/var/lib/rancher/rke2/server/node-token`, we will need it for the agent install.
 
+Side note on Tokens. RKE2 uses the TOKEN has a way to authenticate the agent to the server service. This is a much better system than "trust on first use". The goal of the token process is to setup a control plane Mutual TLS (mtls) certificate termination.
+
 ### RKE2 Agent Install
 
 The agent install is VERY similar to the server install. Except that we need an agent config file before starting. We will start with `rancher2`. We need to install the agent and setup the configuration file.
@@ -325,9 +327,7 @@ We need to validate the Server URL and accept the terms and conditions. And we a
 
 ### Rancher Design
 
-Let's take a second and talk about Ranchers Multi-cluster design. Bottom line, Rancher can operate in a Spoke and Hub model. Meaning one k8s cluster for Rancher and then "downstream" clusters for all the workloads. Personally I prefer the decoupled model where there is only one cluster.
-
-NEEDS MOAR
+Let's take a second and talk about Ranchers Multi-cluster design. Bottom line, Rancher can operate in a Spoke and Hub model. Meaning one k8s cluster for Rancher and then "downstream" clusters for all the workloads. Personally I prefer the decoupled model where there is only one cluster per Rancher install. This allows for continued manageability during networks outages. For the purpose of the is guide we are concentrate on the single cluster deployment. There is good [documentation](https://rancher.com/docs/rancher/v2.6/en/cluster-provisioning/registered-clusters/) on "importing" downstream clusters.
 
 ## Longhorn
 
