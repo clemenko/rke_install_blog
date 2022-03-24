@@ -118,12 +118,7 @@ Here is what the **Ubuntu** version should look like:
 
 Let's validate everything worked as expected. Run a `systemctl status rke2-server` and make sure it is `active`.
 
-```text
-root@rancher1:~# systemctl status rke2-server.service 
-● rke2-server.service - Rancher Kubernetes Engine v2 (server)
-     Loaded: loaded (/usr/local/lib/systemd/system/rke2-server.service; enabled; vendor preset: enabled)
-     Active: active (running) since Mon 2022-03-21 13:21:19 UTC; 2min 11s ago
-```
+![rke_install](img/rke_status.jpg)
 
 Perfect! Now we can start talking Kubernetes. We need to install the `kubectl` cli on `rancher1`. FYI, We can install a newer `kubectl` without any issues.
 
@@ -143,11 +138,7 @@ kubectl  get node
 
 Hopefully everything looks good! Here is an example.
 
-```text
-root@rancher1:~# kubectl  get node
-NAME       STATUS   ROLES                       AGE     VERSION
-rancher1   Ready    control-plane,etcd,master   7m56s   v1.21.10+rke2r2
-```
+![rke_node](img/rke_nodes.jpg)
 
 For those that are not TOO familiar with k8s, the config file is what `kubectl` uses to authenticate to the api service. If you want to use a workstation, jump box, or any other machine you will want to copy `/etc/rancher/rke2/rke2.yaml`. You will want to modify the file to change the ip address. We will need one more file from `rancher1`, aka the server, the agent join token. Copy `/var/lib/rancher/rke2/server/node-token`, we will need it for the agent install.
 
@@ -159,7 +150,7 @@ The agent install is VERY similar to the server install. Except that we need an 
 
 ```bash
 # we add INSTALL_RKE2_TYPE=agent
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.21 INSTALL_RKE2_TYPE=agent sh -  
+curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=agent sh -  
 
 # create config file
 mkdir -p /etc/rancher/rke2/ 
@@ -177,45 +168,11 @@ systemctl start rke2-agent.service
 
 What should this look like:
 
-```text
-root@rancher2:~# curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.21 INSTALL_RKE2_TYPE=agent sh -  
-[INFO]  finding release for channel v1.21
-[INFO]  using v1.21.10+rke2r2 as release
-[INFO]  downloading checksums at https://github.com/rancher/rke2/releases/download/v1.21.10+rke2r2/sha256sum-amd64.txt
-[INFO]  downloading tarball at https://github.com/rancher/rke2/releases/download/v1.21.10+rke2r2/rke2.linux-amd64.tar.gz
-[INFO]  verifying tarball
-[INFO]  unpacking tarball file to /usr/local
-root@rancher2:~# mkdir -p /etc/rancher/rke2/ 
-root@rancher2:~# echo "server: https://142.93.189.52:9345" > /etc/rancher/rke2/config.yaml
-root@rancher2:~# echo "token: K10f46a788f0c2298b1cb3aa9ef169d7ce9cd8965d62c003d263ddd2363892fa613::server:2213cac45dcede3e470b1a5603e889aa" >> /etc/rancher/rke2/config.yaml
-root@rancher2:~# cat /etc/rancher/rke2/config.yaml 
-server: https://142.93.189.52:9345
-token: K10f46a788f0c2298b1cb3aa9ef169d7ce9cd8965d62c003d263ddd2363892fa613::server:2213cac45dcede3e470b1a5603e889aa
-root@rancher2:~# systemctl enable rke2-agent.service
-systemctl start rke2-agent.service
-Created symlink /etc/systemd/system/multi-user.target.wants/rke2-agent.service → /usr/local/lib/systemd/system/rke2-agent.service.
-```
+![rke_agent](img/rke_agent.jpg)
 
-Now we can go back to `rancher1` and check to see if `rancher2` is playing nice.
+Rinse and repeat. Run the same install commands on `rancher3`. Next we can validate all the nodes are playing nice by running `kubectl get node -o wide` on `rancher1`. 
 
-```text
-root@rancher1:~# kubectl  get node
-NAME       STATUS   ROLES                       AGE   VERSION
-rancher1   Ready    control-plane,etcd,master   26m   v1.21.10+rke2r2
-rancher2   Ready    <none>                      86s   v1.21.10+rke2r2
-```
-
-Rinse and repeat. Run the same install commands on `rancher3`.
-
-Checking `rancher` again.
-
-```text
-root@rancher1:~# kubectl  get node
-NAME       STATUS   ROLES                       AGE     VERSION
-rancher3   Ready    <none>                      38s     v1.21.10+rke2r2
-rancher1   Ready    control-plane,etcd,master   29m     v1.21.10+rke2r2
-rancher2   Ready    <none>                      4m42s   v1.21.10+rke2r2
-```
+![moar_nodes](img/moar_nodes.jpg)
 
 Huzzah! RKE2 is fully installed. From here on out we will only need to talk to the kubernetes api. Meaning we will only need to remain ssh'ed into `rancher1`.
 
