@@ -112,23 +112,11 @@ systemctl enable rke2-server.service
 systemctl start rke2-server.service
 ```
 
-Here is what is should look like:
+Here is what the **Ubuntu** version should look like:
 
-```text
-root@rancher1:~# curl -sfL https://get.rke2.io | sh - 
-[INFO]  finding release for channel stable
-[INFO]  using v1.22.7+rke2r2 as release
-[INFO]  downloading checksums at https://github.com/rancher/rke2/releases/download/v1.22.7+rke2r2/sha256sum-amd64.txt
-[INFO]  downloading tarball at https://github.com/rancher/rke2/releases/download/v1.22.7+rke2r2/rke2.linux-amd64.tar.gz
-[INFO]  verifying tarball
-[INFO]  unpacking tarball file to /usr/local
-root@rancher1:~# systemctl enable rke2-server.service 
-Created symlink /etc/systemd/system/multi-user.target.wants/rke2-server.service → /usr/local/lib/systemd/system/rke2-server.service.
-root@rancher1:~# systemctl start rke2-server.service
-root@rancher1:~#
-```
+![rke_install](img/rke_install.jpg)
 
-Let's validate everything worked as expected. Run a `systemctl status rke2-server` and make sure it is `active`. 
+Let's validate everything worked as expected. Run a `systemctl status rke2-server` and make sure it is `active`.
 
 ```text
 root@rancher1:~# systemctl status rke2-server.service 
@@ -155,7 +143,7 @@ kubectl  get node
 
 Hopefully everything looks good! Here is an example.
 
-```
+```text
 root@rancher1:~# kubectl  get node
 NAME       STATUS   ROLES                       AGE     VERSION
 rancher1   Ready    control-plane,etcd,master   7m56s   v1.21.10+rke2r2
