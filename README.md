@@ -54,9 +54,12 @@ rancher2     68.183.150.214     8192   4   160   Ubuntu 21.10 x64
 rancher3     167.71.188.101     8192   4   160   Ubuntu 21.10 x64
 ```
 
-For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher1 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D
+For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher1 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D 
+
+**Ubuntu**:
 
 ```bash
+# Ubuntu instructions 
 # stop the software firewall
 systemctl stop ufw
 systemctl disable ufw
@@ -70,6 +73,28 @@ apt upgrade -y
 apt autoremove -y
 ```
 
+**Rocky / Centos / RHEL**:
+
+```bash
+# Rocky instructions 
+# stop the software firewall
+systemctl stop firewalld
+systemctl disable firewalld
+
+# get updates, install nfs, and apply
+yum install -y nfs-utils cryptsetup iscsi-initiator-utils
+
+# enable iscsi for Longhorn
+systemctl start iscsid.service
+systemctl enable iscsid.service
+
+# update all the things
+yum update -y
+
+# clean up
+yum clean all
+```
+
 Cool, lets move on to the RKE2.
 
 ## RKE2 Install
@@ -80,7 +105,7 @@ Now that we have all the nodes up to date, let's focus on `rancher1`. While this
 
 ```bash
 # On rancher1
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.21 sh - 
+curl -sfL https://get.rke2.io | sh - 
 
 # start and enable for restarts - 
 systemctl enable rke2-server.service 
@@ -90,11 +115,11 @@ systemctl start rke2-server.service
 Here is what is should look like:
 
 ```text
-root@rancher1:~# curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.21 sh - 
-[INFO]  finding release for channel v1.21
-[INFO]  using v1.21.10+rke2r2 as release
-[INFO]  downloading checksums at https://github.com/rancher/rke2/releases/download/v1.21.10+rke2r2/sha256sum-amd64.txt
-[INFO]  downloading tarball at https://github.com/rancher/rke2/releases/download/v1.21.10+rke2r2/rke2.linux-amd64.tar.gz
+root@rancher1:~# curl -sfL https://get.rke2.io | sh - 
+[INFO]  finding release for channel stable
+[INFO]  using v1.22.7+rke2r2 as release
+[INFO]  downloading checksums at https://github.com/rancher/rke2/releases/download/v1.22.7+rke2r2/sha256sum-amd64.txt
+[INFO]  downloading tarball at https://github.com/rancher/rke2/releases/download/v1.22.7+rke2r2/rke2.linux-amd64.tar.gz
 [INFO]  verifying tarball
 [INFO]  unpacking tarball file to /usr/local
 root@rancher1:~# systemctl enable rke2-server.service 
