@@ -54,7 +54,7 @@ rancher2     68.183.150.214     8192   4   160   Ubuntu 21.10 x64
 rancher3     167.71.188.101     8192   4   160   Ubuntu 21.10 x64
 ```
 
-For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher1 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D 
+For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher1 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D
 
 **Ubuntu**:
 
@@ -101,11 +101,11 @@ Cool, lets move on to the RKE2.
 
 ### RKE2 Server Install
 
-Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. There is one option we should set, `INSTALL_RKE2_CHANNEL`. If we look at the [Support Matrix](https://www.suse.com/suse-rancher/support-matrix/all-supported-versions/rancher-v2-6-3/) we will need to use Kubernetes `1.21.x`. Here is how we do that with the tarball version. Please be patient with the start command. It is unpacking the components and it takes a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) for reference.
+Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. For more information about the Rancher versions, please refer to the  [Support Matrix](https://www.suse.com/suse-rancher/support-matrix/all-supported-versions/rancher-v2-6-3/). The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/install_options/install_options/) for reference.
 
 ```bash
 # On rancher1
-curl -sfL https://get.rke2.io | sh - 
+curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=server sh - 
 
 # start and enable for restarts - 
 systemctl enable rke2-server.service 
