@@ -121,14 +121,11 @@ Let's validate everything worked as expected. Run a `systemctl status rke2-serve
 
 ![rke_install](img/rke_status.jpg)
 
-Perfect! Now we can start talking Kubernetes. We need to install the `kubectl` cli on `rancher1`. FYI, We can install a newer `kubectl` without any issues.
+Perfect! Now we can start talking Kubernetes. We need to symlink the `kubectl` cli on `rancher1` that gets installed from RKE2.
 
 ```bash
-# curl all the things - kubectl
-curl -L# https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
-
-# make it executable
-chmod 755 /usr/local/bin/kubectl
+# simlink all the things - kubectl
+ln -s $(find /var/lib/rancher/rke2/data/ -name kubectl) /usr/local/bin/kubectl
 
 # add kubectl conf
 export KUBECONFIG=/etc/rancher/rke2/rke2.yaml 
