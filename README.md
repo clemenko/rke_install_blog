@@ -140,7 +140,7 @@ Hopefully everything looks good! Here is an example.
 
 For those that are not TOO familiar with k8s, the config file is what `kubectl` uses to authenticate to the api service. If you want to use a workstation, jump box, or any other machine you will want to copy `/etc/rancher/rke2/rke2.yaml`. You will want to modify the file to change the ip address. We will need one more file from `rancher1`, aka the server, the agent join token. Copy `/var/lib/rancher/rke2/server/node-token`, we will need it for the agent install.
 
-Side note on Tokens. RKE2 uses the TOKEN has a way to authenticate the agent to the server service. This is a much better system than "trust on first use". The goal of the token process is to setup a control plane Mutual TLS (mtls) certificate termination.
+Side note on Tokens. RKE2 uses the TOKEN as a way to authenticate the agent to the server service. This is a much better system than "trust on first use". The goal of the token process is to setup a control plane Mutual TLS (mtls) certificate termination.
 
 ### RKE2 Agent Install
 
