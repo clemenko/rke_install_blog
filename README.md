@@ -15,6 +15,8 @@ Throughout my career there has always been a disconnect between the documentatio
 
 We will need a few tools for this guide. We will walk through how to install `helm` and `kubectl`.
 
+Or [Watch the video](https://youtu.be/oM-6sd4KSmA).
+
 ---
 
 > **Table of Contents**:
