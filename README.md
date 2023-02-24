@@ -111,8 +111,7 @@ Now that we have all the nodes up to date, let's focus on `rancher1`. While this
 curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=server sh - 
 
 # start and enable for restarts - 
-systemctl enable rke2-server.service 
-systemctl start rke2-server.service
+systemctl enable --now rke2-agent.service
 ```
 
 Here is what the **Ubuntu** version should look like:
@@ -162,8 +161,7 @@ echo "server: https://$RANCHER1_IP:9345" > /etc/rancher/rke2/config.yaml
 echo "token: $TOKEN" >> /etc/rancher/rke2/config.yaml
 
 # enable and start
-systemctl enable rke2-agent.service
-systemctl start rke2-agent.service
+systemctl enable --now rke2-agent.service
 ```
 
 What should this look like:
