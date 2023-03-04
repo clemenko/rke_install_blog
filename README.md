@@ -111,7 +111,7 @@ Now that we have all the nodes up to date, let's focus on `rancher1`. While this
 curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=server sh - 
 
 # start and enable for restarts - 
-systemctl enable --now rke2-agent.service
+systemctl enable --now rke2-server.service
 ```
 
 Here is what the **Ubuntu** version should look like:
