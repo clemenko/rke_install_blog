@@ -64,8 +64,7 @@ For Kubernetes we will need to "set" one of the nodes as the control plane. Ranc
 ```bash
 # Ubuntu instructions 
 # stop the software firewall
-systemctl stop ufw
-systemctl disable ufw
+systemctl disable --now ufw
 
 # get updates, install nfs, and apply
 apt update
@@ -81,15 +80,13 @@ apt autoremove -y
 ```bash
 # Rocky instructions 
 # stop the software firewall
-systemctl stop firewalld
-systemctl disable firewalld
+systemctl disable --now firewalld
 
 # get updates, install nfs, and apply
 yum install -y nfs-utils cryptsetup iscsi-initiator-utils
 
 # enable iscsi for Longhorn
-systemctl start iscsid.service
-systemctl enable iscsid.service
+systemctl enable --now iscsid.service 
 
 # update all the things
 yum update -y
@@ -132,7 +129,7 @@ ln -s $(find /var/lib/rancher/rke2/data/ -name kubectl) /usr/local/bin/kubectl
 export KUBECONFIG=/etc/rancher/rke2/rke2.yaml 
 
 # check node status
-kubectl  get node
+kubectl get node
 ```
 
 Hopefully everything looks good! Here is an example.
