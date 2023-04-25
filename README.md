@@ -105,7 +105,7 @@ Now that we have all the nodes up to date, let's focus on `rancher1`. While this
 
 ```bash
 # On rancher1
-curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=server sh - 
+curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.24 INSTALL_RKE2_TYPE=server sh - 
 
 # start and enable for restarts - 
 systemctl enable --now rke2-server.service
@@ -132,6 +132,13 @@ export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
 kubectl get node
 ```
 
+We will also need to get the token from rancher1.
+
+```bash
+# save this for rancher2 and rancher3
+cat /var/lib/rancher/rke2/server/node-token
+```
+
 Hopefully everything looks good! Here is an example.
 
 ![rke_node](img/rke_nodes.jpg)
@@ -145,8 +152,14 @@ Side note on Tokens. RKE2 uses the TOKEN as a way to authenticate the agent to t
 The agent install is VERY similar to the server install. Except that we need an agent config file before starting. We will start with `rancher2`. We need to install the agent and setup the configuration file.
 
 ```bash
+# we can export the rancher1 IP from the first server.
+export RANCHER1_IP=192.168.1.1  # change this!
+
+# and we can export the token from rancher1.
+export TOKEN=something_magical # change this as well.
+
 # we add INSTALL_RKE2_TYPE=agent
-curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=agent sh -  
+curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.24 INSTALL_RKE2_TYPE=agent sh -  
 
 # create config file
 mkdir -p /etc/rancher/rke2/ 
