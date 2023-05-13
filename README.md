@@ -24,7 +24,7 @@ Or [Watch the video](https://youtu.be/oM-6sd4KSmA).
 > * [Whoami](#whoami)
 > * [Prerequisites](#prerequisites)
 > * [Linux Servers](#linux-servers)
-> * [RKE2 Install](#rke2-install)
+> * [RKE2 Install - V1.24](#rke2-install)
 >   * [RKE2 Server Install](#rke2-server-install)
 >   * [RKE2 Agent Install](#rke2-agent-install)
 > * [Rancher](#rancher)
@@ -102,6 +102,8 @@ Cool, lets move on to the RKE2.
 ### RKE2 Server Install
 
 Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/install_options/install_options/) for reference.
+
+>**It is important to note that we are installing v1.24 in this guide. There are some changes in v1.25 that require a few modifications. I will note them below.**
 
 ```bash
 # On rancher1
@@ -215,6 +217,8 @@ helm upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --cr
 # helm install rancher
 helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.dockr.life --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
 ```
+
+>**Please note that if you install v1.25 you will need to add `--set global.cattle.psp.enabled=false` to the Rancher helm command.**
 
 Here is what it should look like.
 
