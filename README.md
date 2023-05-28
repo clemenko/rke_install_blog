@@ -44,7 +44,7 @@ Just a geek - Andy Clemenko - @clemenko - andy.clemenko@rancherfederal.com
 
 ## Prerequisites
 
-The prerequisites are fairly simple. We need 3 linux servers with access to the internet. They can be bare metal, or in the cloud provider of your choice. I prefer [Digital Ocean](https://digitalocean.com). We need an `ssh` client to connect to the servers. And finally DNS to make things simple. Ideally we need a URL for the Rancher interface. For the purpose of the this guide let's use `rancher.dockr.life`. We will need to point that name to the first server of the cluster. While we are at it, a wildcard DNS for your domain will help as well.
+The prerequisites are fairly simple. We need 3 linux servers with access to the internet. They can be bare metal, or in the cloud provider of your choice. I prefer [Digital Ocean](https://digitalocean.com). We need an `ssh` client to connect to the servers. And finally DNS to make things simple. Ideally we need a URL for the Rancher interface. For the purpose of this guide let's use `rancher.dockr.life`. We will need to point that name to the first server of the cluster. While we are at it, a wildcard DNS for your domain will help as well.
 
 ## Linux Servers
 
@@ -124,7 +124,7 @@ Let's validate everything worked as expected. Run a `systemctl status rke2-serve
 Perfect! Now we can start talking Kubernetes. We need to symlink the `kubectl` cli on `rancher1` that gets installed from RKE2.
 
 ```bash
-# simlink all the things - kubectl
+# symlink all the things - kubectl
 ln -s $(find /var/lib/rancher/rke2/data/ -name kubectl) /usr/local/bin/kubectl
 
 # add kubectl conf
@@ -295,7 +295,7 @@ Happy Containering!
 root@rancher1:~#
 ```
 
-We can also run a `kubectl get pod -A` to see if everything it running. Keep in mind it may take a minute or so for all the pods to come up. GUI time...
+We can also run a `kubectl get pod -A` to see if everything is running. Keep in mind it may take a minute or so for all the pods to come up. GUI time...
 
 ### Rancher GUI
 
@@ -317,7 +317,7 @@ Let's take a second and talk about Ranchers Multi-cluster design. Bottom line, R
 
 ## Longhorn
 
-### Lognhorn Install
+### Longhorn Install
 
 There are two methods for installing. Rancher has Chart built in.
 
@@ -340,7 +340,7 @@ Fairly easy right?
 
 ### Longhorn GUI
 
-One of the benefits of Rancher is it's ability to adjust to whats installed. Meaning the Rancher GUI will see Longhorn is installed and provide a link. Click it.
+One of the benefits of Rancher is its ability to adjust to what's installed. Meaning the Rancher GUI will see Longhorn is installed and provide a link. Click it.
 
 ![longhorn installed](img/longhorn_installed.jpg)
 
