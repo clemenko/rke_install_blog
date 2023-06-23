@@ -208,8 +208,6 @@ Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self
 
 ```bash
 # still on  rancher1
-# add the cert-manager CRD
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.6.1/cert-manager.crds.yaml
 
 # helm install jetstack
 helm upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace
