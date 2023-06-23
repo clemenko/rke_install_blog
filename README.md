@@ -210,7 +210,7 @@ Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self
 # still on  rancher1
 
 # helm install jetstack
-helm upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace
+helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true
 
 # helm install rancher
 helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.dockr.life --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
