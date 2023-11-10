@@ -103,11 +103,11 @@ Cool, lets move on to the RKE2.
 
 Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/configuration#configuring-the-linux-installation-script) for reference.
 
->**It is important to note that we are installing v1.24 in this guide. There are some changes in v1.25 that require a few modifications. I will note them below.**
+>**It is important to note that we are installing v1.26 in this guide. There are some changes in v1.25 that require a few modifications. I will note them below.**
 
 ```bash
 # On rancher1
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.24 INSTALL_RKE2_TYPE=server sh - 
+curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.26 INSTALL_RKE2_TYPE=server sh - 
 
 # start and enable for restarts - 
 systemctl enable --now rke2-server.service
@@ -161,7 +161,7 @@ export RANCHER1_IP=192.168.1.1  # change this!
 export TOKEN=something_magical # change this as well.
 
 # we add INSTALL_RKE2_TYPE=agent
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.24 INSTALL_RKE2_TYPE=agent sh -  
+curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.26 INSTALL_RKE2_TYPE=agent sh -  
 
 # create config file
 mkdir -p /etc/rancher/rke2/ 
@@ -216,8 +216,6 @@ helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-name
 helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.dockr.life --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
 ```
 
->**Please note that if you install v1.25 you will need to add `--set global.cattle.psp.enabled=false` to the Rancher helm command.**
-
 Here is what it should look like.
 
 ```text
@@ -226,14 +224,6 @@ root@rancher1:~# helm repo add rancher-latest https://releases.rancher.com/serve
 
 root@rancher1:~# helm repo add jetstack https://charts.jetstack.io
 "jetstack" has been added to your repositories
-
-root@rancher1:~# kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.6.1/cert-manager.crds.yaml
-customresourcedefinition.apiextensions.k8s.io/certificaterequests.cert-manager.io created
-customresourcedefinition.apiextensions.k8s.io/certificates.cert-manager.io created
-customresourcedefinition.apiextensions.k8s.io/challenges.acme.cert-manager.io created
-customresourcedefinition.apiextensions.k8s.io/clusterissuers.cert-manager.io created
-customresourcedefinition.apiextensions.k8s.io/issuers.cert-manager.io created
-customresourcedefinition.apiextensions.k8s.io/orders.acme.cert-manager.io created
 
 root@rancher1:~# helm upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace
 Release "cert-manager" does not exist. Installing it now.
