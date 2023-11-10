@@ -357,3 +357,4 @@ As we can see, setting up RKE2, Rancher and Longhorn is not that complicated. We
 thanks!
 
 ![success](img/success.jpg)
+
