@@ -3,7 +3,7 @@ title: Simple RKE2, Longhorn, and Rancher Install
 author: Andy Clemenko, @clemenko, clemenko@gmail.com
 ---
 
-# Simple RKE2, Longhorn, and Rancher Install
+# Simple RKE2, Longhorn, and Rancher Install - Updated 2024
 
 ![logp](img/logo_long.jpg)
 
@@ -24,7 +24,7 @@ Or [Watch the video](https://youtu.be/oM-6sd4KSmA).
 > * [Whoami](#whoami)
 > * [Prerequisites](#prerequisites)
 > * [Linux Servers](#linux-servers)
-> * [RKE2 Install - V1.24](#rke2-install)
+> * [RKE2 Install](#rke2-install)
 >   * [RKE2 Server Install](#rke2-server-install)
 >   * [RKE2 Agent Install](#rke2-agent-install)
 > * [Rancher](#rancher)
@@ -107,7 +107,7 @@ Now that we have all the nodes up to date, let's focus on `rancher1`. While this
 
 ```bash
 # On rancher1
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.26 INSTALL_RKE2_TYPE=server sh - 
+curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.28 INSTALL_RKE2_TYPE=server sh - 
 
 # start and enable for restarts - 
 systemctl enable --now rke2-server.service
@@ -161,7 +161,7 @@ export RANCHER1_IP=192.168.1.1  # change this!
 export TOKEN=something_magical # change this as well.
 
 # we add INSTALL_RKE2_TYPE=agent
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.26 INSTALL_RKE2_TYPE=agent sh -  
+curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.28 INSTALL_RKE2_TYPE=agent sh -  
 
 # create config file
 mkdir -p /etc/rancher/rke2/ 
@@ -180,7 +180,7 @@ What should this look like:
 
 ![rke_agent](img/rke_agent.jpg)
 
-Rinse and repeat. Run the same install commands on `rancher3`. Next we can validate all the nodes are playing nice by running `kubectl get node -o wide` on `rancher1`. 
+Rinse and repeat. Run the same install commands on `rancher3`. Next we can validate all the nodes are playing nice by running `kubectl get node -o wide` on `rancher1`.
 
 ![moar_nodes](img/moar_nodes.jpg)
 
@@ -188,11 +188,11 @@ Huzzah! RKE2 is fully installed. From here on out we will only need to talk to t
 
 ## Rancher
 
-For more information about the Rancher versions, please refer to the  [Support Matrix](https://www.suse.com/suse-rancher/support-matrix/all-supported-versions/rancher-v2-6-3/). We are going to use the latest version. For additional reading take a look at the [Rancher docs](https://rancher.com/docs/rancher/v2.6/en/).
+For more information about the Rancher versions, please refer to the  [Support Matrix](https://www.suse.com/suse-rancher/support-matrix/all-supported-versions/). We are going to use the latest version. For additional reading take a look at the [Rancher docs](https://ranchermanager.docs.rancher.com).
 
 ### Rancher Install
 
-For Rancher we will need [Helm](https://helm.sh/). We are going to live on the edge! Here are the [install docs](https://rancher.com/docs/rancher/v2.6/en/installation/install-rancher-on-k8s/) for reference.
+For Rancher we will need [Helm](https://helm.sh/). We are going to live on the edge! Here are the [install docs](https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster) for reference.
 
 ```bash
 # on the server rancher1
@@ -204,7 +204,7 @@ helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 helm repo add jetstack https://charts.jetstack.io
 ```
 
-Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self signed TLS certificates. We need to install it with the Custom Resource Definition (CRD). Please pay attention to the `helm` install for Rancher. The URL will need to be changed to fit your FQDN. Also notice I am setting the `bootstrapPassword` and replicas. This allows us to skip a step later. :D
+Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self signed TLS certificates. We need to install it with the Custom Resource Definition (CRD). Please pay attention to the `helm` install for Rancher. The URL`rancher.dockr.life` will need to be changed to fit your FQDN. Also notice I am setting the `bootstrapPassword` and replicas. This allows us to skip a step later. :D
 
 ```bash
 # still on  rancher1
@@ -213,6 +213,7 @@ Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self
 helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true
 
 # helm install rancher
+# CHANGE rancher.dockr.life to your FQDN
 helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.dockr.life --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
 ```
 
@@ -234,7 +235,7 @@ STATUS: deployed
 REVISION: 1
 TEST SUITE: None
 NOTES:
-cert-manager v1.7.1 has been deployed successfully!
+cert-manager v1.14.4 has been deployed successfully!
 
 In order to begin issuing certificates, you will need to set up a ClusterIssuer
 or Issuer resource (for example, by creating a 'letsencrypt-staging' issuer).
@@ -301,7 +302,7 @@ We need to validate the Server URL and accept the terms and conditions. And we a
 
 ### Rancher Design
 
-Let's take a second and talk about Ranchers Multi-cluster design. Bottom line, Rancher can operate in a Spoke and Hub model. Meaning one k8s cluster for Rancher and then "downstream" clusters for all the workloads. Personally I prefer the decoupled model where there is only one cluster per Rancher install. This allows for continued manageability during networks outages. For the purpose of the is guide we are concentrate on the single cluster deployment. There is good [documentation](https://rancher.com/docs/rancher/v2.6/en/cluster-provisioning/registered-clusters/) on "importing" downstream clusters.
+Let's take a second and talk about Ranchers Multi-cluster design. Bottom line, Rancher can operate in a Spoke and Hub model. Meaning one k8s cluster for Rancher and then "downstream" clusters for all the workloads. Personally I prefer the decoupled model where there is only one cluster per Rancher install. This allows for continued manageability during networks outages. For the purpose of the is guide we are concentrate on the single cluster deployment. There is good [documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/kubernetes-clusters-in-rancher-setup/register-existing-clusters) on "importing" downstream clusters.
 
 ## Longhorn
 
@@ -311,7 +312,7 @@ There are two methods for installing. Rancher has Chart built in.
 
 ![charts](img/charts.jpg)
 
-Now for the good news, [Longhorn docs](https://longhorn.io/docs/1.2.4/deploy/install/) show two easy install methods. Helm and `kubectl`. Let's stick with Helm for this guide.
+Now for the good news, [Longhorn docs](https://longhorn.io/docs/1.6.1/deploy/install/) show two easy install methods. Helm and `kubectl`. Let's stick with Helm for this guide.
 
 ```bash
 # get charts
@@ -352,7 +353,7 @@ Yes we can automate all the things. Here is the repo I use automating the comple
 
 ## Conclusion
 
-As we can see, setting up RKE2, Rancher and Longhorn is not that complicated. We can get deploy Kubernetes, a storage layer, and a management gui in a few minutes. Simple, right? One of the added benefits of using the Suse / Rancher stack is that all the pieces are modular. Use only what you need, when you need it. Hope this was helpful. Please feel free reach out, or open any issues at https://github.com/clemenko/rke_install_blog. 
+As we can see, setting up RKE2, Rancher and Longhorn is not that complicated. We can get deploy Kubernetes, a storage layer, and a management gui in a few minutes. Simple, right? One of the added benefits of using the Suse / Rancher stack is that all the pieces are modular. Use only what you need, when you need it. Hope this was helpful. Please feel free reach out, or open any issues at https://github.com/clemenko/rke_install_blog.
 
 thanks!
 
