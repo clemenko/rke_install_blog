@@ -127,8 +127,9 @@ Perfect! Now we can start talking Kubernetes. We need to symlink the `kubectl` c
 # symlink all the things - kubectl
 ln -s $(find /var/lib/rancher/rke2/data/ -name kubectl) /usr/local/bin/kubectl
 
-# add kubectl conf
-export KUBECONFIG=/etc/rancher/rke2/rke2.yaml 
+# add kubectl conf with persistence, as per Duane
+echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml PATH=$PATH:/usr/local/bin/:/var/lib/rancher/rke2/bin/" >> ~/.bashrc
+source ~/.bashrc
 
 # check node status
 kubectl get node
