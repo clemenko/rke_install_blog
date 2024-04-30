@@ -17,6 +17,8 @@ We will need a few tools for this guide. We will walk through how to install `he
 
 Or [Watch the video](https://youtu.be/oM-6sd4KSmA).
 
+**For more fun check out my list of other content and videos at https://rfed.io/links.**
+
 ---
 
 > **Table of Contents**:
@@ -103,7 +105,7 @@ Cool, lets move on to the RKE2.
 
 Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/configuration#configuring-the-linux-installation-script) for reference.
 
->**It is important to note that we are installing v1.26 in this guide. There are some changes in v1.25 that require a few modifications. I will note them below.**
+>**It is important to note that we are installing v1.28 in this guide. There are some changes in v1.25 that require a few modifications. I will note them below.**
 
 ```bash
 # On rancher1
@@ -359,3 +361,5 @@ As we can see, setting up RKE2, Rancher and Longhorn is not that complicated. We
 thanks!
 
 ![success](img/success.jpg)
+
+**For more fun check out my list of other content and videos at https://rfed.io/links.**
