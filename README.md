@@ -213,7 +213,7 @@ Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self
 # still on  rancher1
 
 # helm install jetstack
-helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set installCRDs=true
+helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set crds.enabled=true
 
 # helm install rancher
 # CHANGE rancher.dockr.life to your FQDN
