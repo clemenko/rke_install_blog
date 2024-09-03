@@ -5,7 +5,7 @@ author: Andy Clemenko, @clemenko, clemenko@gmail.com
 
 # Simple RKE2, Longhorn, NeuVector and Rancher Install - Updated 2024
 
-![logp](img/logo_long.jpg)
+![logp](img/banner-rounded.png)
 
 Throughout my career there has always been a disconnect between the documentation and the practical implementation. The Kubernetes (k8s) ecosystem is no stranger to this problem. This guide is a simple approach to installing Kubernetes and some REALLY useful tools. We will walk through installing all the following.
 
