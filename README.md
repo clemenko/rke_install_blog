@@ -64,6 +64,8 @@ For the sake of this guide we are going to use [Ubuntu](https://ubuntu.com). Our
 
 For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher-01 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates and add a few things. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D
 
+We need to run the following commands on each of your nodes. Make sure you pick the OS of choice.
+
 **Ubuntu**:
 
 ```bash
@@ -104,12 +106,12 @@ Cool, lets move on to the RKE2.
 
 ## RKE2 Install
 
-### RKE2 Server Install
+### RKE2 Server Install (rancher-01)
 
-Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/configuration#configuring-the-linux-installation-script) for reference.
+Now that we have all the nodes up to date, let's focus on `rancher-01`. While this might seem controversial, `curl | bash` does work nicely. The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/configuration#configuring-the-linux-installation-script) for reference.
 
 ```bash
-# On rancher1
+# On rancher-01
 curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=server sh - 
 
 # we can set the token - create config dir/file
@@ -128,7 +130,7 @@ Let's validate everything worked as expected. Run a `systemctl status rke2-serve
 
 ![rke_install](img/rke_status.jpg)
 
-Perfect! Now we can start talking Kubernetes. We need to symlink the `kubectl` cli on `rancher1` that gets installed from RKE2.
+Perfect! Now we can start talking Kubernetes. We need to symlink the `kubectl` cli on `rancher-01` that gets installed from RKE2.
 
 ```bash
 # symlink all the things - kubectl
@@ -148,13 +150,13 @@ Hopefully everything looks good! Here is an example.
 
 For those that are not TOO familiar with k8s, the config file is what `kubectl` uses to authenticate to the api service. If you want to use a workstation, jump box, or any other machine you will want to copy `/etc/rancher/rke2/rke2.yaml`. You will want to modify the file to change the ip address. 
 
-### RKE2 Agent Install
+### RKE2 Agent Install (rancher-02, rancher-03)
 
-The agent install is VERY similar to the server install. Except that we need an agent config file before starting. We will start with `rancher2`. We need to install the agent and setup the configuration file.
+The agent install is VERY similar to the server install. Except that we need an agent config file before starting. We will start with `rancher-02`. We need to install the agent and setup the configuration file.
 
 ```bash
-# we can export the rancher1 IP from the first server.
-export RANCHER1_IP=192.168.1.1  # change this!
+# we can export the rancher-01 IP from the first server.
+export RANCHER1_IP=192.168.1.12   # <-- change this!
 
 # we add INSTALL_RKE2_TYPE=agent
 curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=agent sh -  
@@ -162,7 +164,7 @@ curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=agent sh -
 # create config dir/file
 mkdir -p /etc/rancher/rke2/ 
 
-# change the ip to reflect your rancher1 ip
+# change the ip to reflect your rancher-01 ip
 cat << EOF >> /etc/rancher/rke2/config.yaml
 server: https://$RANCHER1_IP:9345
 token: bootstrapAllTheThings
@@ -176,11 +178,13 @@ What should this look like:
 
 ![rke_agent](img/rke_agent.jpg)
 
-Rinse and repeat. Run the same install commands on `rancher3`. Next we can validate all the nodes are playing nice by running `kubectl get node -o wide` on `rancher1`.
+Rinse and repeat. Run the same install commands on `rancher-03`. Next we can validate all the nodes are playing nice by running `kubectl get node -o wide` on `rancher-01`.
 
 ![moar_nodes](img/moar_nodes.jpg)
 
-Huzzah! RKE2 is fully installed. From here on out we will only need to talk to the kubernetes api. Meaning we will only need to remain ssh'ed into `rancher1`.
+Huzzah! RKE2 is fully installed. From here on out we will only need to talk to the kubernetes api. Meaning we will only need to remain ssh'ed into `rancher-01`.
+
+Now let's install Rancher.
 
 ## Rancher
 
@@ -191,100 +195,34 @@ For more information about the Rancher versions, please refer to the  [Support M
 For Rancher we will need [Helm](https://helm.sh/). We are going to live on the edge! Here are the [install docs](https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster) for reference.
 
 ```bash
-# on the server rancher1
+# on the server rancher-01
 # add helm
 curl -#L https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 # add needed helm charts
-helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
-helm repo add jetstack https://charts.jetstack.io
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest --force-update
+helm repo add jetstack https://charts.jetstack.io --force-update
 ```
 
-Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self signed TLS certificates. We need to install it with the Custom Resource Definition (CRD). Please pay attention to the `helm` install for Rancher. The URL`rancher.dockr.life` will need to be changed to fit your FQDN. Also notice I am setting the `bootstrapPassword` and replicas. This allows us to skip a step later. :D
+Quick note about Rancher. Rancher needs jetstack/cert-manager to create the self signed TLS certificates. We need to install it with the Custom Resource Definition (CRD). Please pay attention to the `helm` install for Rancher. The URL`rancher.192.168.1.12.sslip.io` will need to be changed to for your IP. Also notice I am setting the `bootstrapPassword` and replicas. This allows us to skip a step later. :D
 
 ```bash
-# still on  rancher1
+# still on rancher-01
 
 # helm install jetstack
 helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set crds.enabled=true
 
 # helm install rancher
-# CHANGE rancher.dockr.life to your FQDN
+# CHANGE the IP to the one for rancher-01
+export RANCHER1_IP=192.168.1.12
 helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.$RANCHER1_IP.sslip.io --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
 ```
 
-Here is what it should look like.
-
-```text
-root@rancher1:~# helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
-"rancher-latest" has been added to your repositories
-
-root@rancher1:~# helm repo add jetstack https://charts.jetstack.io
-"jetstack" has been added to your repositories
-
-root@rancher1:~# helm upgrade -i cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace
-Release "cert-manager" does not exist. Installing it now.
-NAME: cert-manager
-LAST DEPLOYED: Mon Mar 21 14:14:47 2022
-NAMESPACE: cert-manager
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-NOTES:
-cert-manager v1.14.4 has been deployed successfully!
-
-In order to begin issuing certificates, you will need to set up a ClusterIssuer
-or Issuer resource (for example, by creating a 'letsencrypt-staging' issuer).
-
-More information on the different types of issuers and how to configure them
-can be found in our documentation:
-
-https://cert-manager.io/docs/configuration/
-
-For information on how to configure cert-manager to automatically provision
-Certificates for Ingress resources, take a look at the `ingress-shim`
-documentation:
-
-https://cert-manager.io/docs/usage/ingress/
-
-root@rancher1:~# helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.dockr.life --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
-Release "rancher" does not exist. Installing it now.
-NAME: rancher
-LAST DEPLOYED: Mon Mar 21 14:15:08 2022
-NAMESPACE: cattle-system
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-NOTES:
-Rancher Server has been installed.
-
-NOTE: Rancher may take several minutes to fully initialize. Please standby while Certificates are being issued, Containers are started and the Ingress rule comes up.
-
-Check out our docs at https://rancher.com/docs/
-
-If you provided your own bootstrap password during installation, browse to https://rancher.dockr.life to get started.
-
-If this is the first time you installed Rancher, get started by running this command and clicking the URL it generates:
-
-\```
-echo https://rancher.dockr.life/dashboard/?setup=$(kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}')
-\```
-
-To get just the bootstrap password on its own, run:
-
-\```
-kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{ "\n" }}'
-\```
-
-Happy Containering!
-root@rancher1:~#
-```
-
-We can also run a `kubectl get pod -A` to see if everything is running. Keep in mind it may take a minute or so for all the pods to come up. GUI time...
+Now we can validate everything installed with a `helm list -A` or `kubectl get pod -A`. Keep in mind it may take a minute or so for all the pods to come up. GUI time...
 
 ### Rancher GUI
 
-Assuming DNS is pointing to first server, `rancher1` for me, we should be able to get to the GUI. The good news is that be default rke2 installs with the `nginx` ingress controller. Keep in mind that the browser may show an error for the self signed certificate. In the case of Chrome you can type "thisisunsafe" and it will let you proceed.
+We should now able to get to the GUI at https://rancher.192.168.1.12.sslip.io. The good news is that be default rke2 installs with the `nginx` ingress controller. Keep in mind that the browser may show an error for the self signed certificate. 
 
 ![error](img/tls_error.jpg)
 
@@ -292,13 +230,19 @@ Once past that you should see the following screen asking about the password. Re
 
 ![welcome](img/welcome.jpg)
 
-We need to validate the Server URL and accept the terms and conditions. And we are in!
+We need to validate the Server URL and accept the terms and conditions.
+
+![eula](img/eula.jpg)
+
+**AND we are in!** Switching to light mode.
 
 ![dashboard](img/dashboard.jpg)
 
 ### Rancher Design
 
 Let's take a second and talk about Ranchers Multi-cluster design. Bottom line, Rancher can operate in a Spoke and Hub model. Meaning one k8s cluster for Rancher and then "downstream" clusters for all the workloads. Personally I prefer the decoupled model where there is only one cluster per Rancher install. This allows for continued manageability during networks outages. For the purpose of the is guide we are concentrate on the single cluster deployment. There is good [documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/kubernetes-clusters-in-rancher-setup/register-existing-clusters) on "importing" downstream clusters.
+
+Now let's install Longhorn.
 
 ## Longhorn
 
@@ -312,10 +256,7 @@ Now for the good news, [Longhorn docs](https://longhorn.io/docs/1.6.1/deploy/ins
 
 ```bash
 # get charts
-helm repo add longhorn https://charts.longhorn.io
-
-# update
-helm repo update
+helm repo add longhorn https://charts.longhorn.io --force-update
 
 # install
 helm upgrade -i longhorn longhorn/longhorn --namespace longhorn-system --create-namespace
@@ -325,7 +266,7 @@ Fairly easy right?
 
 ### Longhorn GUI
 
-One of the benefits of Rancher is its ability to adjust to what's installed. Meaning the Rancher GUI will see Longhorn is installed and provide a link. Click it.
+One of the benefits of Rancher is its ability to adjust to what's installed. Meaning the Rancher GUI will see Longhorn is installed and provide a link. We can find it by navigating to the `local` cluster from the dashboard. Or clicking on the bull with horns icon on the left nav bar under the home. From there look 
 
 ![longhorn installed](img/longhorn_installed.jpg)
 
@@ -336,40 +277,70 @@ This brings up the Longhorn GUI.
 One of the other benefits of this integration is that rke2 also knows it is installed. Run `kubectl get sc` to show the storage classes.
 
 ```text
-root@rancher1:~# kubectl  get sc
+root@rancher-01:~# kubectl  get sc
 NAME                 PROVISIONER          RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
 longhorn (default)   driver.longhorn.io   Delete          Immediate           true                   3m58s
 ```
 
 Now we have a default storage class for the cluster. This allows for the automatic creation of Physical Volumes (PVs) based on a Physical Volume Claim (PVC). The best part is that "it just works" using the existing, unused storage, on the three nodes. Take a look around in the gui. Notice the Volumes on the Nodes. For fun, here is a demo flask app that uses a PVC for Redis. `kubectl apply -f https://raw.githubusercontent.com/clemenko/k8s_yaml/master/flask_simple_nginx.yml`
 
+Now let's install NeuVector.
+
 ## NeuVector
 
 ### NeuVector Install
 
-There are two methods for installing. Rancher has Chart built in.
-
-![charts](img/charts.jpg)
-
-Now for the good news, [Longhorn docs](https://longhorn.io/docs/1.6.1/deploy/install/) show two easy install methods. Helm and `kubectl`. Let's stick with Helm for this guide.
+Similar to Longhorn we are going to use `helm` for the install. We do have a choice to use Single Sign On (SSO) with Rancher's credentials. For this guide we are going to stick with independent username and password. The helm options for SSO are below if you want experiment.
 
 ```bash
-# get charts
-helm repo add longhorn https://charts.longhorn.io
+# helm repo add
+helm repo add neuvector https://neuvector.github.io/neuvector-helm/ --force-update
 
-# update
-helm repo update
+# helm install 
+export RANCHER1_IP=192.168.1.12
 
-# install
-helm upgrade -i longhorn longhorn/longhorn --namespace longhorn-system --create-namespace
+helm upgrade -i neuvector --namespace cattle-neuvector-system neuvector/core --create-namespace --set manager.svc.type=ClusterIP --set controller.pvc.enabled=true --set controller.pvc.capacity=500Mi --set manager.ingress.enabled=true --set manager.ingress.host=neuvector.$RANCHER1_IP.sslip.io --set manager.ingress.tls=true 
+
+# add for single sign-on
+# --set controller.ranchersso.enabled=true --set global.cattle.url=https://rancher.$RANCHER1_IP.sslip.io
 ```
 
-Fairly easy right?
+We should wait a few seconds for the pods to deploy.
+
+```bash
+kubectl get pod -n cattle-neuvector-system
+```
+
+It will take a minute for everything to become running.
+
+```text
+root@rancher-01:~# kubectl get pod -n cattle-neuvector-system
+NAME                                        READY   STATUS    RESTARTS   AGE
+neuvector-controller-pod-657599c5fd-2zfhh   1/1     Running   0          109s
+neuvector-controller-pod-657599c5fd-qd2jx   1/1     Running   0          109s
+neuvector-controller-pod-657599c5fd-qv5nv   1/1     Running   0          109s
+neuvector-enforcer-pod-2dczs                1/1     Running   0          109s
+neuvector-enforcer-pod-47r2q                1/1     Running   0          109s
+neuvector-enforcer-pod-bg7rd                1/1     Running   0          109s
+neuvector-manager-pod-66cfdb8779-f8qtj      1/1     Running   0          109s
+neuvector-scanner-pod-fc48d77fc-b8hb9       1/1     Running   0          109s
+neuvector-scanner-pod-fc48d77fc-h8lwd       1/1     Running   0          109s
+neuvector-scanner-pod-fc48d77fc-mmmpx       1/1     Running   0          109s
+```
+
+Let's take a look at the GUI.
 
 ### NeuVector GUI
 
+Similar to Longhorn, Rancher see that the application is installed and created a NavLink for it. We are going to click it or navigate to http://neuvector.192.168.1.12.sslip.io. The login is `admin/admin`. Make sure to check the EULA box.
 
+![neu](img/neu.jpg)
 
+Before taking a look around we should turn on "Auto Scan". This will automatically scan all images on the cluster. Navigate to Assets --> Containers. In the upper right there is a a toggle for Auto Scan. 
+
+![autoscan](img/autoscan.jpg)
+
+Hopefully you made it this far!
 
 ## Automation
 
@@ -377,7 +348,7 @@ Yes we can automate all the things. Here is the repo I use automating the comple
 
 ## Conclusion
 
-As we can see, setting up RKE2, Rancher and Longhorn is not that complicated. We can get deploy Kubernetes, a storage layer, and a management gui in a few minutes. Simple, right? One of the added benefits of using the Suse / Rancher stack is that all the pieces are modular. Use only what you need, when you need it. Hope this was helpful. Please feel free reach out, or open any issues at https://github.com/clemenko/rke_install_blog.
+As we can see, setting up RKE2, Rancher, NeuVector and Longhorn is not that complicated. We can get deploy Kubernetes, a storage layer, and a management gui in a few minutes. Simple, right? One of the added benefits of using the Suse / Rancher stack is that all the pieces are modular. Use only what you need, when you need it. Hope this was helpful. Please feel free reach out, or open any issues at https://github.com/clemenko/rke_install_blog.
 
 thanks!
 
