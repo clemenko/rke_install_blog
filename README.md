@@ -1,9 +1,9 @@
 ---
-title: Simple RKE2, Longhorn, and Rancher Install
+title: Simple RKE2, Longhorn, NeuVector and Rancher Install
 author: Andy Clemenko, @clemenko, clemenko@gmail.com
 ---
 
-# Simple RKE2, Longhorn, and Rancher Install - Updated 2024
+# Simple RKE2, Longhorn, NeuVector and Rancher Install - Updated 2024
 
 ![logp](img/logo_long.jpg)
 
@@ -12,6 +12,7 @@ Throughout my career there has always been a disconnect between the documentatio
 - [RKE2](https://docs.rke2.io) - Security focused Kubernetes
 - [Rancher](https://www.suse.com/products/suse-rancher/) - Multi-Cluster Kubernetes Management
 - [Longhorn](https://longhorn.io) - Unified storage layer
+- [NeuVector](https://www.suse.com/products/neuvector/) - Full Lifecycle Container Security
 
 We will need a few tools for this guide. We will walk through how to install `helm` and `kubectl`.
 
@@ -35,6 +36,9 @@ Or [Watch the video](https://youtu.be/oM-6sd4KSmA).
 > * [Longhorn](#longhorn)
 >   * [Longhorn Install](#longhorn-install)
 >   * [Longhorn Gui](#longhorn-gui)
+> * [NeuVector](#neuvector)
+>   * [NeuVector Install](#neuvector-install)
+>   * [NeuVector Gui](#neuvector-gui)
 > * [Automation](#automation)
 > * [Conclusion](#conclusion)
 
@@ -42,24 +46,23 @@ Or [Watch the video](https://youtu.be/oM-6sd4KSmA).
 
 ## Whoami
 
-Just a geek - Andy Clemenko - @clemenko - andy.clemenko@rancherfederal.com
+Just a geek - Andy Clemenko - @clemenko - clemenko@gmail.com
 
 ## Prerequisites
 
-The prerequisites are fairly simple. We need 3 linux servers with access to the internet. They can be bare metal, or in the cloud provider of your choice. I prefer [Digital Ocean](https://digitalocean.com). We need an `ssh` client to connect to the servers. And finally DNS to make things simple. Ideally we need a URL for the Rancher interface. For the purpose of this guide let's use `rancher.dockr.life`. We will need to point that name to the first server of the cluster. While we are at it, a wildcard DNS for your domain will help as well.
+The prerequisites are fairly simple. We need 3 linux servers with access to the internet. They can be bare metal, or in the cloud provider of your choice. I prefer [Digital Ocean](https://digitalocean.com). For this guide we are going to use [Harvester](https://harvesterhci.io/). We need an `ssh` client to connect to the servers. For the purpose of this guide let's use https://sslip.io/. We will need to know the IP of the first server of the cluster.
 
 ## Linux Servers
 
 For the sake of this guide we are going to use [Ubuntu](https://ubuntu.com). Our goal is a simple deployment. The recommended size of each node is 4 Cores and 8GB of memory with at least 60GB of storage. One of the nice things about [Longhorn](https://longhorn.io) is that we do not need to attach additional storage. Here is an example list of servers. Please keep in mind that your server names can be anything. Just keep in mind which ones are the "server" and "agents".
 
-| name | ip | memory | core | disk | os |
+| name | core | memory | ip | disk | os |
 |---| --- | --- | --- | --- | --- |
-|rancher1| 142.93.189.52  | 8192 | 4 | 160 | Ubuntu 21.10 x64 |
-|rancher2| 68.183.150.214 | 8192 | 4 | 160 | Ubuntu 21.10 x64 |
-|rancher3| 167.71.188.101 | 8192 | 4 | 160 | Ubuntu 21.10 x64 |
+|rancher-01 | 4 | 8Gi | 192.168.1.12 | 60 | Ubuntu 22.04 x64 |
+|rancher-02 | 4 | 8Gi | 192.168.1.74 | 60 | Ubuntu 22.04 x64 |
+|rancher-03 | 4 | 8Gi | 192.168.1.247 | 60 | Ubuntu 22.04 x64 |
 
-
-For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher1 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates and add a few things. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D
+For Kubernetes we will need to "set" one of the nodes as the control plane. Rancher-01 looks like a winner for this. First we need to `ssh` into all three nodes and make sure we have all the updates and add a few things. For the record I am not a fan of software firewalls. Please feel free to reach to me to discuss. :D
 
 **Ubuntu**:
 
@@ -105,11 +108,13 @@ Cool, lets move on to the RKE2.
 
 Now that we have all the nodes up to date, let's focus on `rancher1`. While this might seem controversial, `curl | bash` does work nicely. The install script will use the tarball install for **Ubuntu** and the RPM install for **Rocky/Centos**. Please be patient, the start command can take a minute. Here are the [rke2 docs](https://docs.rke2.io/install/methods/) and [install options](https://docs.rke2.io/install/configuration#configuring-the-linux-installation-script) for reference.
 
->**It is important to note that we are installing v1.28 in this guide. There are some changes in v1.25 that require a few modifications. I will note them below.**
-
 ```bash
 # On rancher1
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.28 INSTALL_RKE2_TYPE=server sh - 
+curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=server sh - 
+
+# we can set the token - create config dir/file
+mkdir -p /etc/rancher/rke2/ 
+echo "token: bootstrapAllTheThings" > /etc/rancher/rke2/config.yaml
 
 # start and enable for restarts - 
 systemctl enable --now rke2-server.service
@@ -137,20 +142,11 @@ source ~/.bashrc
 kubectl get node
 ```
 
-We will also need to get the token from rancher1.
-
-```bash
-# save this for rancher2 and rancher3
-cat /var/lib/rancher/rke2/server/node-token
-```
-
 Hopefully everything looks good! Here is an example.
 
 ![rke_node](img/rke_nodes.jpg)
 
-For those that are not TOO familiar with k8s, the config file is what `kubectl` uses to authenticate to the api service. If you want to use a workstation, jump box, or any other machine you will want to copy `/etc/rancher/rke2/rke2.yaml`. You will want to modify the file to change the ip address. We will need one more file from `rancher1`, aka the server, the agent join token. Copy `/var/lib/rancher/rke2/server/node-token`, we will need it for the agent install.
-
-Side note on Tokens. RKE2 uses the TOKEN as a way to authenticate the agent to the server service. This is a much better system than "trust on first use". The goal of the token process is to setup a control plane Mutual TLS (mtls) certificate termination.
+For those that are not TOO familiar with k8s, the config file is what `kubectl` uses to authenticate to the api service. If you want to use a workstation, jump box, or any other machine you will want to copy `/etc/rancher/rke2/rke2.yaml`. You will want to modify the file to change the ip address. 
 
 ### RKE2 Agent Install
 
@@ -160,20 +156,17 @@ The agent install is VERY similar to the server install. Except that we need an 
 # we can export the rancher1 IP from the first server.
 export RANCHER1_IP=192.168.1.1  # change this!
 
-# and we can export the token from rancher1.
-export TOKEN=something_magical # change this as well.
-
 # we add INSTALL_RKE2_TYPE=agent
-curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL=v1.28 INSTALL_RKE2_TYPE=agent sh -  
+curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=agent sh -  
 
-# create config file
+# create config dir/file
 mkdir -p /etc/rancher/rke2/ 
 
 # change the ip to reflect your rancher1 ip
-echo "server: https://$RANCHER1_IP:9345" > /etc/rancher/rke2/config.yaml
-
-# change the Token to the one from rancher1 /var/lib/rancher/rke2/server/node-token 
-echo "token: $TOKEN" >> /etc/rancher/rke2/config.yaml
+cat << EOF >> /etc/rancher/rke2/config.yaml
+server: https://$RANCHER1_IP:9345
+token: bootstrapAllTheThings
+EOF
 
 # enable and start
 systemctl enable --now rke2-agent.service
@@ -217,7 +210,7 @@ helm upgrade -i cert-manager jetstack/cert-manager -n cert-manager --create-name
 
 # helm install rancher
 # CHANGE rancher.dockr.life to your FQDN
-helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.dockr.life --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
+helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname=rancher.$RANCHER1_IP.sslip.io --set bootstrapPassword=bootStrapAllTheThings --set replicas=1
 ```
 
 Here is what it should look like.
@@ -349,6 +342,34 @@ longhorn (default)   driver.longhorn.io   Delete          Immediate           tr
 ```
 
 Now we have a default storage class for the cluster. This allows for the automatic creation of Physical Volumes (PVs) based on a Physical Volume Claim (PVC). The best part is that "it just works" using the existing, unused storage, on the three nodes. Take a look around in the gui. Notice the Volumes on the Nodes. For fun, here is a demo flask app that uses a PVC for Redis. `kubectl apply -f https://raw.githubusercontent.com/clemenko/k8s_yaml/master/flask_simple_nginx.yml`
+
+## NeuVector
+
+### NeuVector Install
+
+There are two methods for installing. Rancher has Chart built in.
+
+![charts](img/charts.jpg)
+
+Now for the good news, [Longhorn docs](https://longhorn.io/docs/1.6.1/deploy/install/) show two easy install methods. Helm and `kubectl`. Let's stick with Helm for this guide.
+
+```bash
+# get charts
+helm repo add longhorn https://charts.longhorn.io
+
+# update
+helm repo update
+
+# install
+helm upgrade -i longhorn longhorn/longhorn --namespace longhorn-system --create-namespace
+```
+
+Fairly easy right?
+
+### NeuVector GUI
+
+
+
 
 ## Automation
 
