@@ -91,16 +91,16 @@ apt autoremove -y
 systemctl disable --now firewalld
 
 # get updates, install nfs, and apply
-yum install -y nfs-utils cryptsetup iscsi-initiator-utils
+dnf install -y nfs-utils cryptsetup iscsi-initiator-utils
 
 # enable iscsi for Longhorn
 systemctl enable --now iscsid.service 
 
 # update all the things
-yum update -y
+dnf update -y
 
 # clean up
-yum clean all
+dnf clean all
 ```
 
 Cool, lets move on to the RKE2.
@@ -122,6 +122,7 @@ echo "token: bootstrapAllTheThings" > /etc/rancher/rke2/config.yaml
 # start and enable for restarts - 
 systemctl enable --now rke2-server.service
 ```
+
 
 Here is what the **Ubuntu** version should look like:
 
